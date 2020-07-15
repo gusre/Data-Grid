@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>jsGrid - Basic Scenario</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js" type="text/javascript"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.7.0/spectrum.min.js" type="text/javascript"></script>
+  <link href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" rel="Stylesheet" type="text/css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.6.1/spectrum.min.css" rel="Stylesheet" type="text/css" />
+  <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+  <link type="text/css" rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+
+  <div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title"></h4>
+        </div>
+        <div class="modal-body">
+          <form action="http://localhost:5000/datahandler" method="POST" enctype="multipart/form-data">
+            <label for="username">Name:</label>
+            <input type="text" id="username" name="username" required><br><br>
+            <label for="email">Enter your email:</label>
+            <input type="email" id="email" name="email" required><br><br>
+            <label for="start">Date of birth:</label>
+            <input type="date" id="start" name="dob" required><br><br>
+            <label for="favcolor">Select your favorite color:</label>
+            <input type="color" id="favcolor" name="favcolor" required><br><br>
+            <label for="avatar">Choose a profile picture:</label><br><br>
+            <input type="file" id="avatar" name="avatar" accept="image/png, image/jpeg" required><br><br>
+            <input type="submit" value="Submit"><br><br>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  </div>
+
+
+
+</head>
+
+<body>
+  <div id="jsGrid"></div>
+
+  <script>
+    var db_controller = {
+      loadData: function (filter) {
+        var data = $.Deferred();
+        $.ajax({
+          url: "/DataHandler",
+          dataType: "json",
+          data: filter,
+          type: "GET"
+        }).done(function (response) {
+          data.resolve(response);
+        });
+        //console.log(data);
+        return data.promise();
+      },
+      /*insertItem: function(row){
+        var data = $.Deferred();
+        // row values client side modifications
+        $.ajax({
+          url:"/DataHandler",
+          contentType: "application/json",
+          dataType: "json",
+          data: JSON.stringify(row),
+          type: "POST",
+          success: function(inserted_row, status, headers){
+            alert('bad request');
+            data.resolve(inserted_row);
+            console.log(inserted_row);
+          },
+          error: function(response){
+           console.log(response.responseJSON["Status"]);
+           alert(response.responseJSON["Status"]);
+            $("#jsGrid").jsGrid("loadData");
+            data.reject();
+          }
+        });
+        return data.promise();
+      },*/
+      updateItem: function (row) {
+        var data = $.Deferred();
+        // row values client side modifications
+        update_data = {
+          "old": old_item,
+          "new": row
+        };
+        $.ajax({
+          url: "/DataHandler",
+          contentType: "application/json",
+          dataType: "json",
+          data: JSON.stringify(update_data),
+          type: "PUT",
+          success: function (updated_row, status, headers) {
+            data.resolve(updated_row);
+          },
+          error: function (response) {
+            alert(response.responseJSON['Status']);
+            $("#jsGrid").jsGrid("loadData");
+            data.reject();
+          }
+        });
+        return data.promise();
+      },
+      deleteItem: function (row) {
+        var data = $.Deferred();
+        // row values client side modifications
+        $.ajax({
+          url: "/DataHandler",
+          contentType: "application/json",
+          dataType: "json",
+          data: JSON.stringify(row),
+          type: "DELETE",
+          success: function (deleted_row, status, headers) {
+            data.resolve(deleted_row);
+            console.log(deleted_row);
+          },
+          error: function (response) {
+            //alert(response.responseJSON['Status']);
+            $("#jsGrid").jsGrid("loadData");
+            data.reject();
+          }
+        });
+        return data.promise();
+      },
+    };
+
+   
+    var MyDateField = function(config) {
+        jsGrid.Field.call(this, config);
+    };
+ 
+    MyDateField.prototype = new jsGrid.Field({
+        sorter: function(date1, date2) {
+            return new Date(date1) - new Date(date2);
+        },
+ 
+        itemTemplate: function(value) {
+          console.log(value);
+            return new Date(value).toDateString();
+        },
+ 
+       
+        insertTemplate: function(value) {
+            return this._insertPicker = $("<input>").datepicker({ defaultDate: new Date() });
+        },
+
+        editTemplate: function(value) {
+            return this._editPicker = $("<input>").datepicker().datepicker("setDate", new Date(value));
+        },
+ 
+        insertValue: function() {
+            return this._insertPicker.datepicker("getDate").toISOString();
+        },
+ 
+        editValue: function() {
+            return this._editPicker.datepicker("getDate").toISOString();
+        }
+    });
+ 
+    jsGrid.fields.myDateField = MyDateField;
+
+    var ColorField = function(config) {
+    jsGrid.Field.call(this, config);
+  };
+
+ColorField.prototype = new jsGrid.Field({
+    
+    itemTemplate: function(value,item) {
+      console.log(typeof(value));
+        console.log(item.Color);
+        return $("<div>").css({
+            display: "inline-block",
+            background: item.Color,
+            width: "50px",
+            height: "20px"
+        });
+    },
+    
+    insertTemplate: function(value) {
+        var insertPicker = this._insertPicker = $("<input>").attr("type", "color");
+        setTimeout(function() {
+            insertPicker.spectrum({
+                color: "#fff"
+            });
+        });
+        return insertPicker;
+    },
+    
+    editTemplate: function(value) {
+      console.log(value);
+        var editPicker = this._editPicker = $("<input>").attr("type", "color");
+        setTimeout(function() {
+            editPicker.spectrum({
+                color: value
+            });
+        });
+        
+        return editPicker;
+    },
+    
+    insertValue: function() {
+        return this._insertPicker.spectrum("get").toHexString();
+    },
+    
+    editValue: function() {
+       console.log(this._editPicker.spectrum("get").toHexString());
+        return this._editPicker.spectrum("get").toHexString();
+    }
+    
+});
+
+jsGrid.fields.color = ColorField;
+
+    
+    $("#jsGrid").jsGrid({
+      width: "80%",
+      height: "600px",
+      filtering: true,
+      inserting: false,
+      editing: true,
+      sorting: true,
+      paging: true,
+      pageLoading: true,
+      pageSize: 2,
+      autoload: true,
+      pageIndex: 1,
+      pagerFormat: "Pages: {first} {prev} {pages} {next} {last}    {pageIndex} of {pageCount}",
+      noDataContent: "Data Not Available",
+      onItemUpdating: function (args) {
+        old_item = args.previousItem;
+      },
+      deleteConfirm: function (item) {
+        return "This row will be deleted. Are you Sure?"
+      },
+      confirmDeleting: true,
+      controller: db_controller,
+      fields: [
+        { name: "Name", type: "text", width: 50, validate: "required" },
+        { name: "Email", type: "text", width: 150 },
+        { name: "Date of birth", type: "myDateField", width: 50 },
+        { name: "Color",type: "color",width: 50,},
+        {
+          title: "Photo",
+          type: "text",
+          width: 100,
+          itemTemplate: function (value, item) {
+            console.log(Object.getOwnPropertyNames(item));
+            var x = item.Photo.replace(/\\n/g, "");
+            var p = x.substr(2, x.length - 3);
+            return $('<img/>').attr("src", "data:image/jpeg;base64," + p).attr("width", 100).attr("height", 100);
+
+          }
+        },
+        {
+          type: "control",
+          editButton:true,
+          deleteButton: true,
+          clearFilterButton: true,
+          modeSwitchButton: false,
+          headerTemplate: function () {
+            return $("<button>").attr({ type: "button", class: "btn btn-primary" }).text("Add")
+              .on("click", function () {
+                $('#myModal').modal('show');
+              });
+          },
+        }
+      ]
+    });
+  
+  </script>
+
+  <style>
+    body {
+      font-family: "Roboto";
+      font-size: 17px;
+      background-color: rgba(245, 222, 179, 0.295);
+      margin-top: 20px;
+      margin-left: 150px;
+    }
+
+    .controls {
+      margin: 10px;
+    }
+
+    .summary {
+      font-weight: bold;
+    }
+
+    .modal-body {
+      font-size: 20px;
+      margin: 30px;
+      margin-top: 20px;
+    }
+
+    /* header row */
+    .jsgrid-header-row>.jsgrid-header-cell {
+      background-color: #008080;
+      /* orange */
+      font-family: "Roboto Slab";
+      font-size: 22px;
+      color: white;
+      font-weight: normal;
+    }
+
+    /* rows */
+    .jsgrid-row>.jsgrid-cell {
+      background-color: rgba(0, 255, 255, 0.199);
+    }
+
+    /* alternate rows */
+    .jsgrid-alt-row>.jsgrid-cell {
+      background-color: rgba(245, 222, 179, 0.658);
+    }
+
+    /* editing row */
+    .jsgrid-edit-row>.jsgrid-cell {
+      background-color: #5cb85c;
+    }
+
+    .modal-body {
+      background-color: rgba(210, 180, 140, 0.5);
+    }
+
+    .modal-footer,
+    .modal-header {
+      background-color: silver;
+    }
+  </style>
+</body>
+</html>
