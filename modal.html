@@ -8,7 +8,8 @@
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.js" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.7.0/spectrum.min.js" type="text/javascript"></script>
   <link href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" rel="Stylesheet" type="text/css" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.6.1/spectrum.min.css" rel="Stylesheet" type="text/css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.6.1/spectrum.min.css" rel="Stylesheet"
+    type="text/css" />
   <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
   <link type="text/css" rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
@@ -50,6 +51,41 @@
 
   </div>
 
+  <div class="modal fade" id="myModal2" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title"></h4>
+        </div>
+        <div class="modal-body">
+          <form action="http://localhost:5000/datahandler2" method="POST" enctype="multipart/form-data">
+            <label for="username2">Name:</label>
+            <input type="text" id="username2" name="username2" value=""><br><br>
+            <label for="email2">Enter your email:</label>
+            <input type="email" id="email2" name="email2" value="" readonly><br><br>
+            <label for="start2">Date of birth:</label>
+            <input type="date" id="start2" name="dob2" value=""><br><br>
+            <label for="favcolor2">Select your favorite color:</label>
+            <input type="color" id="favcolor2" name="favcolor2" value="#000000"><br><br>
+            <label for="avatar2">Choose a profile picture:</label><br><br>
+            <input type="file" id="avatar2" name="avatar2" accept="image/png, image/jpeg"><br><br>
+            <img id="image_upload_preview" src="http://placehold.it/100x100" alt="your image" />
+            <input type="hidden" id="version2" name="version2" value="1">
+            <input type="submit" value="Submit"><br><br>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  </div>
 
 
 </head>
@@ -112,7 +148,7 @@
             data.resolve(updated_row);
           },
           error: function (response) {
-            alert(response.responseJSON['Status']);
+            console.log(Object.getOwnPropertyNames(response));
             $("#jsGrid").jsGrid("loadData");
             data.reject();
           }
@@ -142,100 +178,131 @@
       },
     };
 
-   
-    var MyDateField = function(config) {
-        jsGrid.Field.call(this, config);
-    };
- 
-    MyDateField.prototype = new jsGrid.Field({
-        sorter: function(date1, date2) {
-            return new Date(date1) - new Date(date2);
-        },
- 
-        itemTemplate: function(value) {
-          console.log(value);
-            return new Date(value).toDateString();
-        },
- 
-       
-        insertTemplate: function(value) {
-            return this._insertPicker = $("<input>").datepicker({ defaultDate: new Date() });
-        },
 
-        editTemplate: function(value) {
-            return this._editPicker = $("<input>").datepicker().datepicker("setDate", new Date(value));
-        },
- 
-        insertValue: function() {
-            return this._insertPicker.datepicker("getDate").toISOString();
-        },
- 
-        editValue: function() {
-            return this._editPicker.datepicker("getDate").toISOString();
-        }
+    var MyDateField = function (config) {
+      jsGrid.Field.call(this, config);
+    };
+
+    MyDateField.prototype = new jsGrid.Field({
+      sorter: function (date1, date2) {
+        return new Date(date1) - new Date(date2);
+      },
+
+      itemTemplate: function (value) {
+        console.log(value);
+        return new Date(value).toDateString();
+      },
+
+
+      insertTemplate: function (value) {
+        return this._insertPicker = $("<input>").datepicker({ defaultDate: new Date() });
+      },
+
+      editTemplate: function (value) {
+        return this._editPicker = $("<input>").datepicker().datepicker("setDate", new Date(value));
+      },
+
+      insertValue: function () {
+        return this._insertPicker.datepicker("getDate").toISOString();
+      },
+
+      editValue: function () {
+        return this._editPicker.datepicker("getDate").toISOString();
+      }
     });
- 
+
     jsGrid.fields.myDateField = MyDateField;
 
-    var ColorField = function(config) {
-    jsGrid.Field.call(this, config);
-  };
+    var ColorField = function (config) {
+      jsGrid.Field.call(this, config);
+    };
 
-ColorField.prototype = new jsGrid.Field({
-    
-    itemTemplate: function(value,item) {
-      console.log(typeof(value));
+    ColorField.prototype = new jsGrid.Field({
+
+      itemTemplate: function (value, item) {
+        console.log(typeof (value));
         console.log(item.Color);
         return $("<div>").css({
-            display: "inline-block",
-            background: item.Color,
-            width: "50px",
-            height: "20px"
+          display: "inline-block",
+          background: item.Color,
+          width: "50px",
+          height: "20px"
         });
-    },
-    
-    insertTemplate: function(value) {
+      },
+
+      insertTemplate: function (value) {
         var insertPicker = this._insertPicker = $("<input>").attr("type", "color");
-        setTimeout(function() {
-            insertPicker.spectrum({
-                color: "#fff"
-            });
+        setTimeout(function () {
+          insertPicker.spectrum({
+            color: "#fff"
+          });
         });
         return insertPicker;
-    },
-    
-    editTemplate: function(value) {
-      console.log(value);
+      },
+
+      editTemplate: function (value) {
+        console.log(value);
         var editPicker = this._editPicker = $("<input>").attr("type", "color");
-        setTimeout(function() {
-            editPicker.spectrum({
-                color: value
-            });
+        setTimeout(function () {
+          editPicker.spectrum({
+            color: value
+          });
         });
-        
+
         return editPicker;
-    },
-    
-    insertValue: function() {
+      },
+
+      insertValue: function () {
         return this._insertPicker.spectrum("get").toHexString();
-    },
-    
-    editValue: function() {
-       console.log(this._editPicker.spectrum("get").toHexString());
+      },
+
+      editValue: function () {
+        console.log(this._editPicker.spectrum("get").toHexString());
         return this._editPicker.spectrum("get").toHexString();
+      }
+
+    });
+
+    jsGrid.fields.color = ColorField;
+
+
+    function resolveAfter2Seconds(file) {
+      return new Promise(resolve => {
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          console.log(reader.result);
+          alert(reader.result);
+          resolve(reader.result);
+        };
+      });
     }
-    
-});
 
-jsGrid.fields.color = ColorField;
 
-    
+    var ImgField = function (config) {
+      jsGrid.Field.call(this, config);
+    };
+
+    ImgField.prototype = new jsGrid.Field({
+
+      itemTemplate: function (value, item) {
+        console.log(Object.getOwnPropertyNames(item));
+        var x = item.Photo.replace(/\\n/g, "");
+        var p = x.substr(2, x.length - 3);
+        return $('<img/>').attr("src", "data:image/jpeg;base64," + p).attr("width", 100).attr("height", 100);
+
+      },
+    });
+
+    jsGrid.fields.image = ImgField;
+
+
     $("#jsGrid").jsGrid({
       width: "80%",
       height: "600px",
       filtering: true,
       inserting: false,
-      editing: true,
+      editing: false,
       sorting: true,
       paging: true,
       pageLoading: true,
@@ -256,37 +323,73 @@ jsGrid.fields.color = ColorField;
         { name: "Name", type: "text", width: 50, validate: "required" },
         { name: "Email", type: "text", width: 150 },
         { name: "Date of birth", type: "myDateField", width: 50 },
-        { name: "Color",type: "color",width: 50,},
+        { name: "Color", type: "color", width: 50, },
         {
-          title: "Photo",
-          type: "text",
+          name: "Photo",
+          type: "image",
           width: 100,
-          itemTemplate: function (value, item) {
-            console.log(Object.getOwnPropertyNames(item));
-            var x = item.Photo.replace(/\\n/g, "");
-            var p = x.substr(2, x.length - 3);
-            return $('<img/>').attr("src", "data:image/jpeg;base64," + p).attr("width", 100).attr("height", 100);
-
-          }
         },
         {
           type: "control",
-          editButton:true,
+          editButton: false,
           deleteButton: true,
           clearFilterButton: true,
           modeSwitchButton: false,
+          itemTemplate: function (value, item) {
+            var $result = jsGrid.fields.control.prototype.itemTemplate.apply(this, arguments);
+
+            var $customEditButton = $("<button>").attr({ class: "customGridEditbutton jsgrid-button jsgrid-edit-button" })
+              .click(function (e) {
+                alert("ID: " + item.Name);
+                let datt = new Date(item['Date of birth']).toISOString().slice(0, 10);
+                console.log(datt);
+                var x = item.Photo.replace(/\\n/g, "");
+                var p = x.substr(2, x.length - 3);
+                let imgsrc = "data:image/jpeg;base64," + p;
+                $("#username2").attr("value", item['Name']);
+                $("#start2").attr("value", datt);
+                $("#favcolor2").attr("value", item['Color']);
+                $("#email2").attr("value", item['Email']);
+                $("#version2").attr("value", item['Version']);
+                $("#image_upload_preview").attr("src", imgsrc);
+                $('#myModal2').modal('show');
+                e.stopPropagation();
+              });
+            return $("<div>").append($customEditButton).append(this._createDeleteButton(item));
+          },
           headerTemplate: function () {
             return $("<button>").attr({ type: "button", class: "btn btn-primary" }).text("Add")
               .on("click", function () {
                 $('#myModal').modal('show');
               });
           },
-        }
-      ]
+        },
+      ],
+      /*rowDoubleClick: function (args) {
+        console.log('Hi');
+        console.log(args);
+        //alert(Object.getOwnPropertyNames(args));
+        console.log(Object.getOwnPropertyNames(args['item']));
+        let row = args['item'];
+        let datt = new Date(row['Date of birth']).toISOString().slice(0, 10);
+        console.log(datt);
+        var x = row.Photo.replace(/\\n/g, "");
+        var p = x.substr(2, x.length - 3);
+        let imgsrc = "data:image/jpeg;base64," + p;
+        $("#username2").attr("value", row['Name']);
+        $("#start2").attr("value", datt);
+        $("#favcolor2").attr("value", row['Color']);
+        $("#email2").attr("value", row['Email']);
+        $("#version2").attr("value", row['Version']);
+        $("#image_upload_preview").attr("src", imgsrc);
+        $('#myModal2').modal('show');
+      },*/
     });
-  
-  </script>
 
+  </script>
+  <div class="cont">
+    <a href='/download1excel' target="_blank"><button class="buta">Download</button></a>
+  </div>
   <style>
     body {
       font-family: "Roboto";
@@ -343,6 +446,17 @@ jsGrid.fields.color = ColorField;
     .modal-header {
       background-color: silver;
     }
+
+    #image_upload_preview {
+      width: 100%;
+      height: auto;
+    }
+
+    .cont {
+      padding-top: 10px;
+      padding-left: 35%;
+    }
   </style>
 </body>
+
 </html>

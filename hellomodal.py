@@ -2,10 +2,16 @@ from flask import *
 import json
 from flask_sqlalchemy import SQLAlchemy
 import base64 
-
+import xlsxwriter
+from PIL import Image
+from io import BytesIO
+import os
+import pandas as pd
 app = Flask('jsgrid-playground', template_folder='.')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://gusree:gunaSREE1@@db4free.net:3306/gusree_12'
+#'mysql+pymysql://admin:gunaSREE1*@flaskfinale.csp5sayedzk7.us-east-1.rds.amazonaws.com:3306/sample'
+#'mysql+pymysql://gusree:gunaSREE1@@db4free.net:3306/gusree_12'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 
@@ -72,25 +78,119 @@ def convert_row_to_dict(x):
     d['Photo']=str(base64.encodebytes(x.image))
     d['Version']=x.version
     return d
+db.create_all()
+@app.route('/download1excel')
+def excel():
+    count=People.query.all()
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    newDF = pd.DataFrame()
+    newDF.to_excel(writer, startrow = 0, merge_cells = False, sheet_name = "Sheet1")
+    workbook = writer.book
+    worksheet = writer.sheets["Sheet1"]
+    header = workbook.add_format({'align': 'center'})
+    worksheet.set_default_row(100)
+    worksheet.set_column(0, 5, 25)
+    worksheet.write(0,0,"Name",header) 
+    worksheet.write(0,1,"Email",header) 
+    worksheet.write(0,2,"Date of Birth",header) 
+    worksheet.write(0,3,"Color",header) 
+    worksheet.write(0,4,"Profile pic",header) 
+    row=1
+    col=0
+    for ele in count:
+        #l=[ele.name,ele.email,str(ele.dob)[0:10],ele.color]
+        worksheet.write(row, col,ele.name,header) 
+        worksheet.write(row, col+1,ele.email,header) 
+        worksheet.write(row,col+2,str(ele.dob)[0:10],header)
+        worksheet.write(row, col+3,ele.color,header) 
+        p="imageToSave"+str(row)+".png"
+        with open(p, "wb") as fh:
+            fh.write(ele.image)
+        worksheet.insert_image(row,col+4,p,{'x_scale':0.5,'y_scale':0.5,'x_offset':7,'y_offset':7,'positioning':1})
+        row+=1
+    workbook.close()
+    output.seek(0)
+    for x in range(1,row):
+        os.remove("imageToSave"+str(x)+".png")
+    return send_file(output, attachment_filename="testing.xlsx", as_attachment=True)
 
 @app.route('/DataHandler', methods=['GET',])
 def getdata():
     #print(request.json['pageIndex'])
     print(request.json)
     my_dict=request.args
+    fname=None 
+    fmail=None
     for key in my_dict:
         print(key,my_dict[key])
+        if(key=='Name'):
+            fname=my_dict[key]
+        if(key=='Email'):
+            fmail=my_dict[key]
     print(request.url)
     print(request.query_string)
     i=(int(request.args['pageIndex'])-1)*int(request.args['pageSize'])
     j=i+int(request.args['pageSize'])
-    count=People.query.slice(i,j).all()
+    '''if(fname!=None and fmail!=None):
+        filter_spec = [{'field': 'name', 'op': '==', 'value':fname}]
+        filter_spec = [{'field': 'email', 'op': '==', 'value':fmail}]
+        filtered_query = apply_filters(query, filter_spec)
+        result = filtered_query.all()
+        count=People.query.slice(i,j).filter(and_(name=fname,email=fmail))'''
+    if fname!='':
+        count=People.query.filter_by(name=fname).slice(i,j)
+    elif fmail!='':
+        count=People.query.filter_by(email=fmail).slice(i,j)
+    else:
+        count=People.query.slice(i,j).all()
     #converting rows brought from database to list of dicts
     arr=list(map(convert_row_to_dict,count))
     ct=Countitem.query.all()
     #print(arr,ct[0].count)
     return jsonify({'data':arr,'itemsCount':ct[0].count})
 
+
+
+@app.route('/datahandler2', methods=['POST',])
+def updatedata2():
+    print(request)
+    print(request.form)
+    if request.method=="POST":
+        new_version=request.form['version2']
+        new_name=request.form['username2']
+        new_mail=request.form['email2']
+        new_dob=request.form['dob2']
+        new_color=request.form['favcolor2']
+        new_pic=request.files['avatar2'].read()
+        try:
+            person = People.query.filter_by(email=new_mail).first()
+            print(person.version)
+            print(new_version)
+            if person.version==int(new_version):
+                print('Yes')
+                to_update=dict()
+                if new_name!=person.name:
+                    to_update['name']=new_name
+                if new_dob!=person.dob:
+                    to_update['dob']=new_dob
+                if new_color!=person.color:
+                    to_update['color']=new_color
+                if len(new_pic)>0 and new_pic!=person.image:
+                    to_update['image']=new_pic
+                if len(to_update)>0:
+                    try:
+                        to_update['version']=int(new_version)+1
+                        People.query.filter_by(email=new_mail).update(to_update)
+                        db.session.commit()
+                    except:
+                        pass
+                return redirect(url_for('index'))
+        except:
+            print('Cant load person from data table')
+        else:
+            print('No')
+            return Response(json.dumps({'Status': 'Version mismatch,try again'}), status=422, mimetype="application/json")
 
 @app.route('/DataHandler', methods=['PUT',])
 def updatedata():
@@ -121,6 +221,10 @@ def updatedata():
             if(x!='Email'):
                 if(x=='Version'):
                     to_update[l[x]]=old_row[x]+1
+                elif(x=='Photo'):
+                    print(type(new_row[x]))
+                    #img=new_row[x][22:]
+                    #to_update[l[x]]=base64.b64decode(img) 
                 else:
                     if(old_row[x]!=new_row[x]):
                         to_update[l[x]]=new_row[x]
@@ -147,7 +251,7 @@ def insertdata():
         try:
             db.session.add(new_person)
             db.session.commit()
-            return render_template('modal.html')
+            return redirect(url_for('index'))
         except:
             return Response(json.dumps({'Status': 'Image cant be proccessed,change image'}), status=422, mimetype="application/json")
 
@@ -189,6 +293,7 @@ def deletedata():
     person_row=request.json
     email=person_row['Email']
     person = People.query.filter_by(email=email).first()
+    print(person)
     db.session.delete(person)
     db.session.commit()
     data=convert_row_to_dict(person)
