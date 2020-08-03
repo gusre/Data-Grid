@@ -292,7 +292,6 @@
 
             var $customEditButton = $("<button>").attr({ class: "customGridEditbutton jsgrid-button jsgrid-edit-button" })
               .click(function (e) {
-                alert("ID: " + item.Name);
                 let datt = new Date(item['Date of birth']).toISOString().slice(0, 10);
                 console.log(datt);
                 var x = item.Photo.replace(/\\n/g, "");
