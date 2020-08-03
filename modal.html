@@ -71,6 +71,7 @@
             <label for="avatar2">Choose a profile picture:</label><br><br>
             <input type="file" id="avatar2" name="avatar2" accept="image/png, image/jpeg"><br><br>
             <img id="image_upload_preview" src="https://via.placeholder.com/100" alt="your image" />
+            <br/>
             <input type="hidden" id="version2" name="version2" value="1">
             <input type="submit" value="Submit"><br><br>
           </form>
@@ -91,7 +92,25 @@
 <body>
   <div id="jsGrid"></div>
 
+  
+
   <script>
+    function readURL(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+
+      reader.onload = function (e) {
+        $('#image_upload_preview').attr('src', e.target.result);
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+  $(document).ready(function () {
+    $("#avatar2").change(function () {
+      readURL(this);
+    });
+  }
+  );
     var db_controller = {
       loadData: function (filter) {
         var data = $.Deferred();
@@ -258,7 +277,7 @@
       sorting: true,
       paging: true,
       pageLoading: true,
-      pageSize: 2,
+      pageSize: 3,
       autoload: true,
       pageIndex: 1,
       pagerFormat: "Pages: {first} {prev} {pages} {next} {last}    {pageIndex} of {pageCount}",
@@ -399,8 +418,8 @@
     }
 
     #image_upload_preview {
-      width: 100%;
-      height: auto;
+      width: 200px;
+      height: 200px;
     }
 
     .cont {
