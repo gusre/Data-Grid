@@ -184,8 +184,9 @@ def updatedata2():
                         People.query.filter_by(email=new_mail).update(to_update)
                         db.session.commit()
                     except:
-                        pass
-                return redirect(url_for('index'))
+                        pass 
+                return render_template("modal.html")
+                #return redirect(url_for('index'))
         except:
             print('Cant load person from data table')
         else:
@@ -251,7 +252,8 @@ def insertdata():
         try:
             db.session.add(new_person)
             db.session.commit()
-            return redirect(url_for('index'))
+            return render_template("modal.html")
+            #return redirect(url_for('index'))
         except:
             return Response(json.dumps({'Status': 'Image cant be proccessed,change image'}), status=422, mimetype="application/json")
 
@@ -289,7 +291,9 @@ def deletedata():
     2.Delete the row from database using roll number
     3.Return jsonify of above row
     c"""
-    
+    print(request)
+    print(request.query_string)
+    print(request.url)
     person_row=request.json
     email=person_row['Email']
     person = People.query.filter_by(email=email).first()
