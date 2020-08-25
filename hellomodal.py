@@ -185,8 +185,8 @@ def updatedata2():
                         db.session.commit()
                     except:
                         pass 
-                return render_template("modal.html")
-                #return redirect(url_for('index'))
+                #return render_template("modal.html")
+                return redirect(url_for('index'))
         except:
             print('Cant load person from data table')
         else:
