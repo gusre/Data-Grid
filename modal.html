@@ -148,7 +148,7 @@
         });
         return data.promise();
       },*/
-      updateItem: function (row) {
+     /* updateItem: function (row) {
         var data = $.Deferred();
         // row values client side modifications
         update_data = {
@@ -171,7 +171,7 @@
           }
         });
         return data.promise();
-      },
+      },*/
       deleteItem: function (row) {
         var data = $.Deferred();
         // row values client side modifications
@@ -235,20 +235,6 @@
     });
 
     jsGrid.fields.color = ColorField;
-
-
-    function resolveAfter2Seconds(file) {
-      return new Promise(resolve => {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          console.log(reader.result);
-          alert(reader.result);
-          resolve(reader.result);
-        };
-      });
-    }
-
 
     var ImgField = function (config) {
       jsGrid.Field.call(this, config);
@@ -357,9 +343,7 @@
     });
 
   </script>
-  <div class="cont">
-    <a href='/download1excel' target="_blank"><button class="buta">Download</button></a>
-  </div>
+  
   <style>
     body {
       font-family: "Roboto";

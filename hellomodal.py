@@ -7,9 +7,9 @@ from PIL import Image
 from io import BytesIO
 import os
 import pandas as pd
+from config import Config
 app = Flask('jsgrid-playground', template_folder='.')
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://gusree:gunaSREE1@@db4free.net:3306/gusree_12'
+app.config.from_object(Config)
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 
@@ -43,46 +43,9 @@ def convert_row_to_dict(x):
     d['Version']=x.version
     return d
 
-@app.route('/download1excel')
-def excel():
-    count=People.query.all()
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    newDF = pd.DataFrame()
-    newDF.to_excel(writer, startrow = 0, merge_cells = False, sheet_name = "Sheet")
-    workbook = writer.book
-    worksheet = writer.sheets["Sheet"]
-    header = workbook.add_format({'align': 'center'})
-    worksheet.set_default_row(100)
-    worksheet.set_column(0, 5, 25)
-    worksheet.write(0,0,"Name",header) 
-    worksheet.write(0,1,"Email",header) 
-    worksheet.write(0,2,"Date of Birth",header) 
-    worksheet.write(0,3,"Color",header) 
-    worksheet.write(0,4,"Profile pic",header) 
-    row=1
-    col=0
-    for ele in count:
-        #l=[ele.name,ele.email,str(ele.dob)[0:10],ele.color]
-        worksheet.write(row, col,ele.name,header) 
-        worksheet.write(row, col+1,ele.email,header) 
-        worksheet.write(row, col+2,str(ele.dob)[0:10],header)
-        worksheet.write(row, col+3,ele.color,header) 
-        p="imageToSave"+str(row)+".png"
-        with open(p, "wb") as fh:
-            fh.write(ele.image)
-        worksheet.insert_image(row,col+4,p,{'x_scale':0.5,'y_scale':0.5})
-        row+=1
-    workbook.close()
-    output.seek(0)
-    #for x in range(1,row):
-        #os.remove("imageToSave"+str(x)+".png")
-    return send_file(output, attachment_filename="testing.xlsx", as_attachment=True)
 
 @app.route('/DataHandler', methods=['GET',])
 def getdata():
-    #print(request.json['pageIndex'])
-    print(request.json)
     my_dict=request.args
     fname=None 
     fmail=None
@@ -174,18 +137,9 @@ def insertdata():
 
 @app.route('/DataHandler', methods=['DELETE',])
 def deletedata():
-    """
-    1.Retrieve roll number,name,branch,section,year,semester,version from request
-    2.Delete the row from database using roll number
-    3.Return jsonify of above row
-    c"""
-    print(request)
-    print(request.query_string)
-    print(request.url)
     person_row=request.json
     email=person_row['Email']
     person = People.query.filter_by(email=email).first()
-    print(person)
     db.session.delete(person)
     db.session.commit()
     data=convert_row_to_dict(person)
@@ -198,4 +152,4 @@ def index():
     return render_template("modal.html")
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
